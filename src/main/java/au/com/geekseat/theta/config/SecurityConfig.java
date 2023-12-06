@@ -56,7 +56,7 @@ public class SecurityConfig {
                 (request, response, exception) -> {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
                 });
-        http.authorizeRequests().antMatchers("/actuator/health", "/actuator/metrics", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
+        http.authorizeRequests().antMatchers("/actuator/health", "/actuator/metrics", "/actuator/metrics/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
         if (yamlConfig.getPublicApiList().size() > 0) {
             http.authorizeRequests().antMatchers(String.join(", ", yamlConfig.getPublicApiList())).permitAll();
             LOGGER.info("Added public API: '{}' ", String.join("', '", yamlConfig.getPublicApiList()));
