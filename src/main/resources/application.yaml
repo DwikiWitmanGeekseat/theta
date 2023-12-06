@@ -28,6 +28,15 @@ spring:
     enabled: ${DATABASE_MIGRATION:true}
     change-log: classpath:db/db.changelog.yaml
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
 application:
   configuration:
     cors-allowed-list:
