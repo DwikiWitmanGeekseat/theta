@@ -31,8 +31,3 @@ build/
 
 ### VS Code ###
 .vscode/
-/thetadb-data/
-
-### macOS
-.DS_Store
-/.database/
