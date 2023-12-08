@@ -13,8 +13,9 @@ import org.springframework.web.filter.ForwardedHeaderFilter;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Configuration
-@OpenAPIDefinition(info = @Info(title = "Theta Spring Boot", description = "Theta Framework in Spring Boot", version = "v1", license = @License(name = "Geekseat", url = "https://www.geekseat.com.au")))
+@OpenAPIDefinition(info = @Info(title = "Theta Spring Boot", description = "Theta Framework in Spring Boot", version = "v1", license = @License(name = "Flexidev", url = "https://www.flexidev.co")))
 public class SwaggerConfig {
+    // Access local: http://localhost:9090/theta/swagger-ui/index.html
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
