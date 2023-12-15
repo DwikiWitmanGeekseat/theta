@@ -36,7 +36,7 @@ public class ShopController {
     }
 
     @GetMapping(value = "/bulk/add") //
-    public ResponseEntity<Long> bulkAdd(@RequestParam("limit") Integer limit) {
+    public ResponseEntity<Long> bulkAdd(@RequestParam("limit") Integer limit) throws Exception {
         limit = Utility.coalesce(limit, 1000);
         Long start = System.currentTimeMillis();
 

@@ -1,6 +1,5 @@
 package co.flexidev.theta.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
@@ -14,7 +13,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Entity
+
+@Table(schema = "person")
 public class Person extends BaseModel implements UserDetails {
 
     @Column(name = "name", nullable = false, length = 255)
@@ -31,9 +31,11 @@ public class Person extends BaseModel implements UserDetails {
     @Column(name = "password", nullable = false, length = 500)
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("persons")
-    private Collection<Role> roles = new ArrayList<>();
+    @Column(name = "roles", nullable = false, length = 500)
+    private String roles;
+
+    @Transient
+    private Collection<String> roleCollection = new ArrayList<>();
 
     public Person() {
     }
@@ -46,6 +48,17 @@ public class Person extends BaseModel implements UserDetails {
         this.password = person.getPassword();
         this.setActive(person.getActive());
         this.roles = person.getRoles();
+
+        String rolesString = person.getRoles();
+        if (rolesString != null && !rolesString.isEmpty()) {
+            String[] roleNames = rolesString.split(",");
+            for (String roleName : roleNames) {
+                String trimmedRole = roleName.trim();
+                if (!trimmedRole.isEmpty()) {
+                    roleCollection.add(trimmedRole);
+                }
+            }
+        }
     }
 
     public String toString() {
@@ -65,13 +78,6 @@ public class Person extends BaseModel implements UserDetails {
         map.put("email", this.email);
         map.put("password", "[PROTECTED]");
         return map;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getName())));
-        return authorities;
     }
 
     @Override
@@ -97,6 +103,22 @@ public class Person extends BaseModel implements UserDetails {
     @Override
     public boolean isEnabled() {
         return this.getActive();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        String rolesString = getRoles();
+        if (rolesString != null && !rolesString.isEmpty()) {
+            String[] roleNames = rolesString.split(",");
+            for (String roleName : roleNames) {
+                String trimmedRole = roleName.trim();
+                if (!trimmedRole.isEmpty()) {
+                    authorities.add(new SimpleGrantedAuthority(trimmedRole));
+                }
+            }
+        }
+        return authorities;
     }
 
     public String getName() {
@@ -132,12 +154,19 @@ public class Person extends BaseModel implements UserDetails {
         this.password = password;
     }
 
-    public Collection<Role> getRoles() {
+    public String getRoles() {
         return roles;
     }
 
-    public void setRoles(Collection<Role> roles) {
+    public void setRoles(String roles) {
         this.roles = roles;
     }
 
+    public Collection<String> getRoleCollection() {
+        return roleCollection;
+    }
+
+    public void setRoleCollection(Collection<String> roleCollection) {
+        this.roleCollection = roleCollection;
+    }
 }

@@ -3,7 +3,6 @@ package co.flexidev.theta.controller;
 import co.flexidev.theta.error.BadRequestException;
 import co.flexidev.theta.error.ForbiddenRequestException;
 import co.flexidev.theta.model.Person;
-import co.flexidev.theta.model.Role;
 import co.flexidev.theta.security.Login;
 import co.flexidev.theta.service.PersonService;
 import com.auth0.jwt.JWT;
@@ -57,7 +56,7 @@ public class AuthenticationController {
                         .withSubject(person.getEmail())
                         .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000))
                         .withClaim("email", "useremail")
-                        .withClaim("roles", person.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
+                        .withClaim("roles", person.getRoleCollection().stream().collect(Collectors.toList()))
                         .sign(algorithm);
 
                 Map<String, String> tokens = new HashMap<>();

@@ -1,13 +1,13 @@
 package co.flexidev.theta.controller;
 
 import co.flexidev.theta.model.Person;
-import co.flexidev.theta.model.Role;
 import co.flexidev.theta.service.PersonService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 @RestController
@@ -22,7 +22,7 @@ public class PersonController {
     }
 
     @PutMapping
-    public ResponseEntity<Person> update(@RequestBody Person person) {
+    public ResponseEntity<Person> update(@RequestBody Person person) throws SQLException {
         if (person.getId() == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -32,11 +32,6 @@ public class PersonController {
     @GetMapping
     public ResponseEntity<Iterable<Person>> findAll() {
         Iterable<Person> personList = personService.findAll();
-        for (Person person : personList) {
-            Long personId = person.getId();
-            List<Role> roles = personService.findRolesByPersonId(personId);
-            person.setRoles(roles); // Set roles for the current person
-        }
         return ResponseEntity.ok(personList);
     }
 
@@ -57,19 +52,13 @@ public class PersonController {
     @GetMapping("/email")
     public ResponseEntity<Person> findByEmail(@RequestParam String email) {
         Person person = personService.findByEmail(email);
-        Long personId = person.getId();
-        List<Role> roles = personService.findRolesByPersonId(personId);
-        person.setRoles(roles);
         return ResponseEntity.ok(person);
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PostMapping("/save")
-    public ResponseEntity<Person> save(@RequestBody @Valid Person person) {
+    public ResponseEntity<Person> save(@RequestBody @Valid Person person) throws Exception {
         Person dbPerson = personService.savePerson(person);
-//        for (Role role : dbPerson.getRoles()) {
-//            personService.savePersonRole(dbPerson.getId(), role.getId());
-//        }
         return ResponseEntity.ok(dbPerson);
     }
     @GetMapping("/active")
@@ -83,7 +72,7 @@ public class PersonController {
     }
 
     @PutMapping("/edit")
-    public ResponseEntity<Person> edit(@RequestBody Person person) {
+    public ResponseEntity<Person> edit(@RequestBody Person person) throws Exception {
         return ResponseEntity.ok(personService.save(person));
     }
 
