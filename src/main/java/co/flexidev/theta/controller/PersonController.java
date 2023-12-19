@@ -2,7 +2,11 @@ package co.flexidev.theta.controller;
 
 import co.flexidev.theta.model.Person;
 import co.flexidev.theta.service.PersonService;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -10,80 +14,91 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.List;
 
-@RestController
+@Path("/api/person")
 @PreAuthorize("hasAnyAuthority('ROLE_USER')")
-@RequestMapping("/api/person")
+@Produces(MediaType.APPLICATION_JSON)
 public class PersonController {
 
     private final PersonService personService;
 
+    @Inject
     public PersonController(PersonService personService) {
         this.personService = personService;
     }
 
-    @PutMapping
-    public ResponseEntity<Person> update(@RequestBody Person person) throws SQLException {
+    @PUT
+    public Response update(Person person) throws SQLException {
         if (person.getId() == null) {
-            return ResponseEntity.badRequest().build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }
-        return ResponseEntity.ok(personService.save(person));
+        return Response.ok(personService.save(person)).build();
     }
 
-    @GetMapping
-    public ResponseEntity<Iterable<Person>> findAll() {
+    @GET
+    public Response findAll() {
         Iterable<Person> personList = personService.findAll();
-        return ResponseEntity.ok(personList);
+        return Response.ok(personList).build();
     }
 
-    @GetMapping("/datatables")
-    public ResponseEntity<?> datatables(
-            @RequestParam(required = false, value = "itemsPerPage", defaultValue = "10") Long itemsPerPage,
-            @RequestParam(required = false, value = "page", defaultValue = "0") Long page,
-            @RequestParam(required = false, value = "sortBy", defaultValue = "") List<String> sortBy,
-            @RequestParam(required = false, value = "sortDesc", defaultValue = "false") List<Boolean> sortDesc) {
-        return ResponseEntity.ok().body(personService.datatables(page, itemsPerPage, sortBy, sortDesc));
+    @GET
+    @Path("/datatables")
+    public Response datatables(
+            @QueryParam("itemsPerPage") Long itemsPerPage,
+            @QueryParam("page") Long page,
+            @QueryParam("sortBy") List<String> sortBy,
+            @QueryParam("sortDesc") List<Boolean> sortDesc) {
+        return Response.ok(personService.datatables(page, itemsPerPage, sortBy, sortDesc)).build();
     }
 
-    @GetMapping("/count")
-    public ResponseEntity<Long> count() {
-        return ResponseEntity.ok(personService.count());
+    @GET
+    @Path("/count")
+    public Response count() {
+        return Response.ok(personService.count()).build();
     }
 
-    @GetMapping("/email")
-    public ResponseEntity<Person> findByEmail(@RequestParam String email) {
+    @GET
+    @Path("/email")
+    public Response findByEmail(@QueryParam("email") String email) {
         Person person = personService.findByEmail(email);
-        return ResponseEntity.ok(person);
+        return Response.ok(person).build();
     }
 
+    @POST
+    @Path("/save")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
-    @PostMapping("/save")
-    public ResponseEntity<Person> save(@RequestBody @Valid Person person) throws Exception {
+    public Response save(Person person) throws Exception {
         Person dbPerson = personService.savePerson(person);
-        return ResponseEntity.ok(dbPerson);
-    }
-    @GetMapping("/active")
-    public ResponseEntity<Iterable<Person>> findByActive(@RequestParam Boolean active) {
-        return ResponseEntity.ok(personService.findByActive(active));
+        return Response.ok(dbPerson).build();
     }
 
-    @PostMapping("/trx/demo")
-    public ResponseEntity<Person> trxDemo(@RequestBody @Valid Person person) throws Exception {
-        return ResponseEntity.ok(personService.trxDemo(person));
+    @GET
+    @Path("/active")
+    public Response findByActive(@QueryParam("active") Boolean active) {
+        return Response.ok(personService.findByActive(active)).build();
     }
 
-    @PutMapping("/edit")
-    public ResponseEntity<Person> edit(@RequestBody Person person) throws Exception {
-        return ResponseEntity.ok(personService.save(person));
+    @POST
+    @Path("/trx/demo")
+    public Response trxDemo(Person person) throws Exception {
+        return Response.ok(personService.trxDemo(person)).build();
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity delete(@RequestParam Long id) {
+    @PUT
+    @Path("/edit")
+    public Response edit(Person person) throws Exception {
+        return Response.ok(personService.save(person)).build();
+    }
+
+    @DELETE
+    @Path("/delete")
+    public Response delete(@QueryParam("id") Long id) {
         personService.deleteById(id);
-        return ResponseEntity.ok().build();
+        return Response.ok().build();
     }
 
-    @DeleteMapping("/inactive/delete")
-    public ResponseEntity<Integer> deleteInactivePerson() {
-        return ResponseEntity.ok(personService.deleteInactivePerson());
+    @DELETE
+    @Path("/inactive/delete")
+    public Response deleteInactivePerson() {
+        return Response.ok(personService.deleteInactivePerson()).build();
     }
 }

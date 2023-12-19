@@ -10,8 +10,12 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,21 +33,22 @@ import java.util.stream.Collectors;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@RestController
-@RequestMapping("/api/authentication")
+@Path("/api/authentication")
+@Produces(MediaType.APPLICATION_JSON)
 public class AuthenticationController {
 
     private final AuthenticationManager authenticationManager;
     private final PersonService personService;
 
+    @Inject
     public AuthenticationController(AuthenticationManager authenticationManager, PersonService personService) {
         this.authenticationManager = authenticationManager;
         this.personService = personService;
     }
 
-    @GetMapping("/token/refresh")
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String authorizationHeader = request.getHeader(AUTHORIZATION);
+    @GET
+    @Path("/token/refresh")
+    public Response refreshToken(@HeaderParam("Authorization") String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             try {
                 String refresh_token = authorizationHeader.substring("Bearer ".length());
@@ -62,8 +67,8 @@ public class AuthenticationController {
                 Map<String, String> tokens = new HashMap<>();
                 tokens.put("access_token", access_token);
                 tokens.put("refresh_token", refresh_token);
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), tokens);
+
+                return Response.ok(tokens).build();
             } catch (Exception e) {
                 throw new ForbiddenRequestException(e.getMessage());
             }
@@ -72,15 +77,13 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping(path = "/login")
-    public ResponseEntity login(@RequestBody Login login) {
+    @POST
+    @Path("/login")
+    public Response login(Login login) {
         try {
-            Authentication authentication = authenticationManager
-                    .authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    login.getEmail(), login.getPassword()
-                            )
-                    );
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword())
+            );
 
             Person person = (Person) authentication.getPrincipal();
             Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
@@ -104,9 +107,9 @@ public class AuthenticationController {
             tokens.put("token", access_token);
             tokens.put("refresh_token", refresh_token);
 
-            return ResponseEntity.ok(tokens);
+            return Response.ok(tokens).build();
         } catch (BadCredentialsException e) {
-            return ResponseEntity.badRequest().body("Invalid Username and Password");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid Username and Password").build();
         }
     }
 }
